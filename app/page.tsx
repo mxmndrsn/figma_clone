@@ -9,8 +9,9 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useStorage, useUndo, useRedo } from "@/liveblocks.config";
 import { defaultNavElement } from "@/constants";
 import { handleImageUpload } from "@/lib/shapes";
-import { handleCanvasMouseDown, handleCanvasMouseMove, handleCanvasMouseUp, handleCanvasObjectModified, handleResize, handleCanvasSelectionCreated, handleCanvasObjectScaling, initializeFabric, renderCanvas } from "@/lib/canvas";
+import { handleCanvasMouseDown, handleCanvasMouseMove, handleCanvasMouseUp, handleCanvasObjectModified, handleResize, handleCanvasSelectionCreated, handleCanvasObjectScaling, initializeFabric, renderCanvas, handlePathCreated } from "@/lib/canvas";
 import { handleDelete, handleKeyDown } from "@/lib/key-events";
+import { ActiveElement, Attributes } from "@/types/type";
 
 export default function Page() {
   const undo = useUndo();
@@ -124,9 +125,8 @@ export default function Page() {
       })
     })
 
-    canvas.on("mouse:up", (options) => {
+    canvas.on("mouse:up", () => {
       handleCanvasMouseUp({
-        options,
         canvas,
         isDrawing,
         shapeRef,
@@ -156,6 +156,13 @@ export default function Page() {
       handleCanvasObjectScaling({
         options,
         setElementAttributes
+      })
+    })
+
+    canvas.on("path:created", (options) => {
+      handlePathCreated({
+        options,
+        syncShapeInStorage
       })
     })
 
@@ -205,8 +212,8 @@ export default function Page() {
       />
 
       <section className="flex h-full flex-row">
-        <LeftSidebar allShapes={Array.from(canvasObjects)}/>
-          <Live canvasRef={canvasRef}/>
+        <LeftSidebar allShapes={Array.from(canvasObjects?? [])}/>
+          <Live canvasRef={canvasRef} undo={undo} redo={redo}/>
         <RightSidebar
           elementAttributes={elementAttributes}
           setElementAttributes={setElementAttributes}
